@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - code-execution-network
+
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    networks:
+      - code-execution-network
+
+  docker-in-docker:
+    image: docker:dind
+    privileged: true
+    environment:
+      - DOCKER_TLS_CERTDIR=/certs
+    volumes:
+      - docker-certs-client:/certs/client
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - code-execution-network
+
+networks:
+  code-execution-network:
+    driver: bridge
+
+volumes:
+  docker-certs-client:
